@@ -25,6 +25,8 @@ export interface Unit {
   cargo: string[];
   /** Transport id if this land unit is aboard. */
   loadedOn: string | null;
+  /** Carrier id if this fighter is aboard a carrier. */
+  carrierId: string | null;
 }
 
 export interface CellState {
@@ -43,6 +45,8 @@ export interface Battle {
   bombardCells: string[];
   /** Submarine ids that submerged out of this battle. */
   submerged: string[];
+  /** Allied powers whose units also attack in this battle. */
+  allies: PowerId[];
 }
 
 export type LogEvent =
@@ -77,6 +81,8 @@ export interface GameState {
   capturedThisTurn: string[];
   /** Land cells the active power controlled at the start of its current turn. */
   controlledAtTurnStart: string[];
+  /** Units placed at each factory cell this turn (production cap). */
+  placedThisTurn: Record<string, number>;
   /** Canal passable for the active side at turn start. */
   canalOpen: Record<"panama" | "suez", boolean>;
   battles: Battle[];

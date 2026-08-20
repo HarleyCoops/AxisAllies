@@ -49,6 +49,7 @@ export function createInitialState(seed = 1): GameState {
           hits: 0,
           cargo: [],
           loadedOn: null,
+          carrierId: null,
         });
       }
     }
@@ -74,6 +75,7 @@ export function createInitialState(seed = 1): GameState {
     pending: [],
     capturedThisTurn: [],
     controlledAtTurnStart: ussrLand,
+    placedThisTurn: {},
     canalOpen: { panama: true, suez: true },
     battles: [],
     log: [{ t: "phase", power: "ussr", phase: "purchase", turn: 1 }],
@@ -108,6 +110,11 @@ export function removeUnit(state: GameState, id: string): void {
     if (tr) tr.cargo = tr.cargo.filter((c) => c !== id);
   }
   state.units = state.units.filter((x) => x.id !== id);
+  if (u.type === "carrier") {
+    for (const f of state.units) {
+      if (f.carrierId === id) f.carrierId = null;
+    }
+  }
 }
 
 export function spawnUnit(state: GameState, type: UnitType, owner: PowerId, cell: string): Unit {
@@ -121,6 +128,7 @@ export function spawnUnit(state: GameState, type: UnitType, owner: PowerId, cell
     hits: 0,
     cargo: [],
     loadedOn: null,
+    carrierId: null,
   };
   state.units.push(u);
   return u;

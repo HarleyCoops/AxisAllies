@@ -48,7 +48,7 @@ describe("combat math", () => {
     spawnUnit(s, "aaa", "germany", "wrussia");
     spawnUnit(s, "infantry", "germany", "wrussia");
     spawnUnit(s, "fighter", "ussr", "wrussia");
-    const battle: Battle = { cell: "wrussia", kind: "land", attacker: "ussr", opened: false, bombardCells: [], submerged: [] };
+    const battle: Battle = { cell: "wrussia", kind: "land", attacker: "ussr", opened: false, bombardCells: [], submerged: [], allies: [] };
     const rng = createRng(3);
     resolveOpeningFire(s, battle, rng);
     expect(battle.opened).toBe(true);
@@ -62,7 +62,7 @@ describe("scripted mini-battle", () => {
     spawnUnit(s, "infantry", "ussr", "wrussia");
     spawnUnit(s, "infantry", "ussr", "wrussia");
     spawnUnit(s, "infantry", "germany", "wrussia");
-    const battle: Battle = { cell: "wrussia", kind: "land", attacker: "ussr", opened: false, bombardCells: [], submerged: [] };
+    const battle: Battle = { cell: "wrussia", kind: "land", attacker: "ussr", opened: false, bombardCells: [], submerged: [], allies: [] };
     resolveBattle(s, battle, createRng(1942));
     const ger = s.units.filter((u) => u.owner === "germany" && u.cell === "wrussia");
     const rus = s.units.filter((u) => u.owner === "ussr" && u.cell === "wrussia");

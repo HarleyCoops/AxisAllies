@@ -150,10 +150,16 @@ function transportCapacityOk(state: GameState, transport: Unit, incoming: Unit):
 }
 
 function carrierHasRoom(state: GameState, sea: string, power: PowerId): boolean {
-  const carriers = unitsAt(state, sea, (u) => u.owner === power && u.type === "carrier");
-  if (!carriers.length) return false;
-  const fighters = unitsAt(state, sea, (u) => areAllied(u.owner, power) && u.type === "fighter").length;
-  return fighters < carriers.length * 2;
+  return landingCarrier(state, sea, power) !== null;
+}
+
+/** First friendly carrier in `sea` with fewer than two assigned fighters, or null. */
+export function landingCarrier(state: GameState, sea: string, power: PowerId): string | null {
+  for (const carrier of unitsAt(state, sea, (u) => areAllied(u.owner, power) && u.type === "carrier")) {
+    const assigned = state.units.filter((u) => u.carrierId === carrier.id).length;
+    if (assigned < 2) return carrier.id;
+  }
+  return null;
 }
 
 export function destinationsFor(state: GameState, unit: Unit): string[] {
@@ -242,14 +248,22 @@ export function unloadActions(state: GameState): Action[] {
   return actions;
 }
 
-function eligibleFactories(state: GameState): string[] {
+export function eligibleFactories(state: GameState): string[] {
   return state.controlledAtTurnStart.filter((id) => state.cells[id]?.factory && state.cells[id]?.controller === state.activePower);
+}
+
+/** Units a factory can still place this turn: territory IPC minus damage minus already placed. */
+export function factoryCapacity(state: GameState, id: string): number {
+  const def = CELL_BY_ID[id];
+  if (!def) return 0;
+  const damage = Math.min(def.ipc, state.cells[id]?.factoryDamage ?? 0);
+  return Math.max(0, def.ipc - damage - (state.placedThisTurn[id] ?? 0));
 }
 
 export function placeActions(state: GameState): Action[] {
   const types = [...new Set(state.pending)];
   const actions: Action[] = [];
-  const factories = eligibleFactories(state);
+  const factories = eligibleFactories(state).filter((id) => factoryCapacity(state, id) > 0);
   for (const unit of types) {
     const domain = UNIT_CATALOG[unit].domain;
     if (unit === "factory") {

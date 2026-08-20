@@ -1,6 +1,7 @@
 import { adjacentIds, CELL_BY_ID } from "../data/board.ts";
 import {
   COMBAT_TABLE,
+  POWERS,
   UNIT_CATALOG,
   areAllied,
   isLandCombatant,
@@ -15,7 +16,10 @@ export function attackersIn(state: GameState, battle: Battle): Unit[] {
   return unitsAt(
     state,
     battle.cell,
-    (u) => u.owner === battle.attacker && participates(u, battle.kind) && !battle.submerged.includes(u.id),
+    (u) =>
+      (u.owner === battle.attacker || battle.allies.includes(u.owner)) &&
+      participates(u, battle.kind) &&
+      !battle.submerged.includes(u.id),
   );
 }
 
@@ -311,6 +315,12 @@ export function fillBombardment(state: GameState, battle: Battle): void {
   );
 }
 
+function alliedAttackers(state: GameState, cell: string, power: PowerId): PowerId[] {
+  return POWERS.filter(
+    (p) => p !== power && areAllied(p, power) && unitsAt(state, cell, (x) => x.owner === p && x.type !== "factory").length > 0,
+  );
+}
+
 export function detectBattles(state: GameState, power: PowerId): Battle[] {
   const battles: Battle[] = [];
   const seen = new Set<string>();
@@ -327,7 +337,7 @@ export function detectBattles(state: GameState, power: PowerId): Battle[] {
     const controller = state.cells[u.cell]?.controller;
     const hostileIc = def.kind === "land" && Boolean(controller && !areAllied(controller, power)) && def.factory;
     if (hostileIc && bombers.length && !atkLand.length) {
-      battles.push({ cell: u.cell, kind: "sbr", attacker: power, opened: false, bombardCells: [], submerged: [] });
+      battles.push({ cell: u.cell, kind: "sbr", attacker: power, opened: false, bombardCells: [], submerged: [], allies: [] });
       continue;
     }
 
@@ -337,10 +347,11 @@ export function detectBattles(state: GameState, power: PowerId): Battle[] {
       (x) => x.owner !== power && !areAllied(x.owner, power) && x.type !== "factory" && x.type !== "aaa",
     );
     if (!enemies.length) continue;
+    const allies = alliedAttackers(state, u.cell, power);
     if (def.kind === "sea") {
-      battles.push({ cell: u.cell, kind: "sea", attacker: power, opened: false, bombardCells: [], submerged: [] });
+      battles.push({ cell: u.cell, kind: "sea", attacker: power, opened: false, bombardCells: [], submerged: [], allies });
     } else {
-      const battle: Battle = { cell: u.cell, kind: "land", attacker: power, opened: false, bombardCells: [], submerged: [] };
+      const battle: Battle = { cell: u.cell, kind: "land", attacker: power, opened: false, bombardCells: [], submerged: [], allies };
       fillBombardment(state, battle);
       if (battle.bombardCells.length) battle.kind = "amphibious";
       battles.push(battle);

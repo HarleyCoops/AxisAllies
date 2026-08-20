@@ -53,12 +53,13 @@ Implemented since v1:
 - SBR damage reduces the territory's income 1:1 (down to zero) during collect.
 - Air units reserve one movement for landing during combat move.
 - Submarines may submerge out of a sea battle when no enemy destroyer is present.
+- IC production caps: a factory places at most `territory IPC − damage` units per turn; sea units count against the adjacent factory.
+- Multinational attack: allied powers' units in the same cell fight together as attackers.
+- Carrier-fighter pairing: fighters are assigned to a specific carrier (max two); a destroyed carrier releases its fighters.
 
-Still open:
+Still open (intentional simplifications):
 
-- IC production / placement caps are not modeled (a damaged factory still places at full capacity).
-- Only the active power attacks (no multinational attack).
-- Carrier-fighter pairing is approximate (fighters in the same sea, 2 per carrier).
+- Capture in a multinational attack is attributed to the active (lead) power, not a chosen ally.
 - Optional neutrals-can-be-attacked rule is off: neutrals are impassable.
 - Some merged land stacks and almost all navies are best-effort.
 

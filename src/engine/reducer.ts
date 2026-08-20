@@ -19,7 +19,7 @@ import {
   resolveBattle,
 } from "./combat.ts";
 import { checkVictory, collectIncome, ipcHeld } from "./income.ts";
-import { isFriendlyLand, isLegal, isNeutral, neighborsForMove } from "./legal.ts";
+import { eligibleFactories, factoryCapacity, isFriendlyLand, isLegal, isNeutral, landingCarrier, neighborsForMove } from "./legal.ts";
 import { resetTurnFlags, spawnUnit, unitById, unitsAt } from "./state.ts";
 import type { Action, GameState, Phase, Unit } from "./types.ts";
 
@@ -52,6 +52,7 @@ function beginPowerTurn(state: GameState, power: PowerId): void {
   state.controlledAtTurnStart = CELLS.filter(
     (c) => c.kind === "land" && state.cells[c.id].controller === power,
   ).map((c) => c.id);
+  state.placedThisTurn = {};
   snapshotCanals(state, power);
   resetTurnFlags(state);
   state.log.push({ t: "phase", power, phase: "purchase", turn: state.turn });
@@ -87,7 +88,7 @@ function captureCell(state: GameState, cell: string, taker: PowerId): void {
 }
 
 function landConquerors(state: GameState, cell: string, power: PowerId): Unit[] {
-  return unitsAt(state, cell, (u) => u.owner === power && isLandCombatant(u.type));
+  return unitsAt(state, cell, (u) => areAllied(u.owner, power) && isLandCombatant(u.type));
 }
 
 function resolveUncontested(state: GameState, power: PowerId): void {
@@ -222,6 +223,10 @@ function applyMove(state: GameState, unitId: string, to: string): void {
   u.cell = to;
   u.moved += 1;
   if (state.phase === "combat_move") u.combatMoved = true;
+  if (u.type === "fighter" && state.phase === "noncombat_move") {
+    const carrier = landingCarrier(state, to, state.activePower);
+    if (carrier) u.carrierId = carrier;
+  }
   for (const cid of u.cargo) {
     const c = unitById(state, cid);
     if (c) c.cell = to;
@@ -273,6 +278,12 @@ function applyPlace(state: GameState, unit: (typeof UNIT_CATALOG)[keyof typeof U
     state.cells[at].factory = true;
     state.log.push({ t: "note", text: `${state.activePower} placed factory in ${at}` });
     return;
+  }
+  if (UNIT_CATALOG[unit].domain === "sea") {
+    const f = eligibleFactories(state).find((id) => neighborsForMove(state, id).includes(at) && factoryCapacity(state, id) > 0);
+    if (f) state.placedThisTurn[f] = (state.placedThisTurn[f] ?? 0) + 1;
+  } else {
+    state.placedThisTurn[at] = (state.placedThisTurn[at] ?? 0) + 1;
   }
   spawnUnit(state, unit, state.activePower, at);
   state.log.push({ t: "note", text: `${state.activePower} placed ${unit} in ${at}` });
