@@ -68,3 +68,9 @@ Reimplemented, not copied from infoxiao/turf-war:
 6. Watcher UI is a replay / live spectator of the 12×12 grid.
 
 Diplomacy / public messages between powers are out of scope for this slice.
+
+## Spectator chrome
+
+The Vite spectator (`index.html`, `src/spectator/`) is an original visual tribute to a 1942 Second Edition table: felt app chrome, parchment continents with paper grain, deep / coastal teal sea, Special Elite map labels, Source Serif 4 UI, painted control rims, victory-city stars, and hand-drawn 12–16px unit silhouettes. It does not ship official scans, box art, logos, trademarked fonts, or traced plastic sculpts.
+
+The gym is unchanged: `WIDTH=12` `HEIGHT=12`, `src/data/board.ts` geography, legal moves, combat, and rewards stay as specified in this file. Chrome-only files may be restyled; engine and data tables must not be forked for looks.

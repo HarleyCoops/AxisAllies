@@ -12,7 +12,7 @@ The playable geography is a 12×12 schematic (same *size* as a 12×12 research c
 
 Five powers (USSR → Germany → UK → Japan → USA) take turns through Purchase → Combat Move → Combat → Noncombat Move → Place Units → Collect Income. Each power is an isolated policy. The harness is the only thing that mutates state. Decisions must match the action schema **and** the current legal-action mask.
 
-The spectator is a replay / live watcher of that 12×12 grid: stacks, phase, treasuries, battle log. It is not a purchase-sheet hot-seat client.
+The spectator is a replay / live watcher of that 12×12 grid: stacks, phase, treasuries, battle log. It is not a purchase-sheet hot-seat client. Its board chrome is an original tribute to the 1942 Second Edition table look (parchment land, deep teal sea, period type, silhouette stacks). The gym is unchanged.
 
 ## Edition
 

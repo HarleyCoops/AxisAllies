@@ -4,19 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AxisAllies — spectator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Special+Elite&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/src/spectator/style.css" />
   </head>
   <body>
     <div id="app">
       <header class="top">
-        <div>
-          <p class="eyebrow">12×12 multi-agent gym · agents play · humans watch</p>
+        <div class="briefing">
+          <p class="eyebrow">Operations briefing · 12×12 schematic · agents play · humans watch</p>
           <h1>AxisAllies spectator</h1>
+          <p class="dossier">Original fan tribute to the 1942 Second Edition table. Gym unchanged.</p>
         </div>
         <div class="controls">
           <button id="live" type="button">Play live random</button>
           <button id="pause" type="button">Pause</button>
-          <label>Speed <input id="speed" type="range" min="1" max="20" value="8" /></label>
+          <label class="dial">Speed <input id="speed" type="range" min="1" max="20" value="8" /></label>
           <label class="file">Load spectator.json <input id="file" type="file" accept="application/json" /></label>
         </div>
       </header>
@@ -36,7 +43,8 @@
       </main>
       <footer>
         Fan-made tribute to classic global WWII blockette-game mechanics. Not affiliated with Hasbro, Avalon Hill, or
-        Wizards of the Coast. Original 12×12 schematic — no official art.
+        Wizards of the Coast. Original 12×12 schematic — no official art. Board chrome is an original tribute to the
+        1942 Second Edition table look.
       </footer>
     </div>
     <script type="module" src="/src/spectator/main.ts"></script>

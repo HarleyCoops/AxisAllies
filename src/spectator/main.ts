@@ -1,10 +1,35 @@
-import { CELLS, HEIGHT, WIDTH } from "../data/board.ts";
-import { POWER_META, POWERS, UNIT_CATALOG, type PowerId, type UnitType } from "../data/catalog.ts";
+import { adjacentIds, CELL_BY_ID, CELLS, HEIGHT, WIDTH, type CellDef } from "../data/board.ts";
+import { POWER_META, POWERS, type PowerId } from "../data/catalog.ts";
 import type { GameState } from "../engine/types.ts";
 import { createEnv } from "../gym/env.ts";
 import { observe } from "../gym/observation.ts";
 import { compactFrame } from "../engine/view.ts";
 import { RandomLegalPolicy } from "../harness/policies.ts";
+import { factoryGlyph, stackGlyph } from "./tokens.ts";
+
+const COASTAL_SEA = new Set<string>();
+for (const cell of CELLS) {
+  if (cell.kind !== "sea") continue;
+  if (adjacentIds(cell.id).some((id) => CELL_BY_ID[id]?.kind !== "sea")) {
+    COASTAL_SEA.add(cell.id);
+  }
+}
+
+function isNamedTheatre(def: CellDef): boolean {
+  return def.kind === "sea" && !def.name.startsWith("Sea ");
+}
+
+function cellClassName(def: CellDef, ctrl: string | null | undefined): string {
+  const parts = ["cell", def.kind];
+  if (ctrl) parts.push(ctrl);
+  if (def.canal) parts.push("canal");
+  if (def.capital) parts.push("capital");
+  if (def.victoryCity) parts.push("victory");
+  if (def.factory) parts.push("has-factory");
+  if (def.kind === "sea" && COASTAL_SEA.has(def.id)) parts.push("coast");
+  if (isNamedTheatre(def)) parts.push("theatre");
+  return parts.join(" ");
+}
 
 interface Frame {
   turn: number;
@@ -44,8 +69,8 @@ function slim(state: GameState): Frame {
 
 function render(frame: Frame, action?: unknown): void {
   boardEl.innerHTML = "";
-  boardEl.style.gridTemplateColumns = `repeat(${WIDTH}, minmax(52px, 1fr))`;
-  boardEl.style.gridTemplateRows = `repeat(${HEIGHT}, minmax(52px, 1fr))`;
+  boardEl.style.gridTemplateColumns = `repeat(${WIDTH}, minmax(64px, 1fr))`;
+  boardEl.style.gridTemplateRows = `repeat(${HEIGHT}, minmax(64px, 1fr))`;
 
   const stacks = new Map<string, Map<string, Map<string, number>>>();
   if (frame.stacks) {
@@ -71,24 +96,30 @@ function render(frame: Frame, action?: unknown): void {
       const def = CELLS.find((c) => c.x === x && c.y === y)!;
       const ctrl = frame.controllers?.[def.id] ?? frame.cells?.[def.id]?.controller;
       const el = document.createElement("div");
-      el.className = `cell ${def.kind}${ctrl ? ` ${ctrl}` : ""}`;
-      const vc = def.victoryCity ? `<div class="vc">${def.victoryCity}${def.capital ? " ★" : ""}</div>` : "";
+      el.className = cellClassName(def, ctrl);
+      const marks: string[] = [];
+      if (def.victoryCity) {
+        marks.push(`<div class="vc"><span class="star" aria-hidden="true">★</span>${def.victoryCity}</div>`);
+      }
+      if (def.factory) {
+        marks.push(`<span class="factory-mark" title="Industrial complex">${factoryGlyph()}</span>`);
+      }
       const ipc = def.kind === "land" ? `<span class="ipc">${def.ipc}</span>` : "";
       let chips = "";
-      const here = stacks.get(def.id);
+      const here = def.kind === "neutral" ? undefined : stacks.get(def.id);
       if (here) {
         chips = `<div class="stacks">${[...here.entries()]
           .map(([owner, types]) =>
             [...types.entries()]
               .map(
                 ([t, n]) =>
-                  `<span class="chip ${owner}" title="${owner} ${t}">${n}${UNIT_CATALOG[t as UnitType].symbol}</span>`,
+                  `<span class="stack ${owner}" title="${owner} ${t}">${n}${stackGlyph(t)}</span>`,
               )
               .join(""),
           )
           .join("")}</div>`;
       }
-      el.innerHTML = `<div class="name">${def.short}</div>${ipc}${vc}${chips}`;
+      el.innerHTML = `<div class="name">${def.short}</div><div class="marks">${marks.join("")}</div>${ipc}${chips}`;
       boardEl.appendChild(el);
     }
   }
@@ -100,7 +131,7 @@ function render(frame: Frame, action?: unknown): void {
 
   powersEl.innerHTML = POWERS.map((p) => {
     const m = POWER_META[p];
-    return `<div><span style="color:${m.color}">${m.short}</span><span>${frame.treasuries[p]} IPC · inc ${frame.income[p]}</span></div>`;
+    return `<div class="power-row ${p}" title="${m.name}"><span class="tick" aria-hidden="true"></span><span class="short">${m.short}</span><span class="tally">${frame.treasuries[p]} IPC · inc ${frame.income[p]}</span></div>`;
   }).join("");
 
   logEl.innerHTML = "";
