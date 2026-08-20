@@ -1,0 +1,26 @@
+{
+  "name": "axisallies",
+  "version": "0.1.0",
+  "description": "Multi-agent / RL gym for classic Axis & Allies 1942 2e mechanics on a 12×12 schematic board. Agents play; humans watch.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "play": "tsx src/cli/play.ts",
+    "preview": "vite preview"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.4",
+    "vitest": "^3.1.2"
+  }
+}

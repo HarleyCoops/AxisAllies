@@ -1,0 +1,9 @@
+node_modules/
+dist/
+runs/*
+!runs/.gitkeep
+public/latest-run.json
+.env
+.DS_Store
+*.log
+.vite/

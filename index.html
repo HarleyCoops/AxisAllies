@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AxisAllies — spectator</title>
+    <link rel="stylesheet" href="/src/spectator/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="top">
+        <div>
+          <p class="eyebrow">12×12 multi-agent gym · agents play · humans watch</p>
+          <h1>AxisAllies spectator</h1>
+        </div>
+        <div class="controls">
+          <button id="live" type="button">Play live random</button>
+          <button id="pause" type="button">Pause</button>
+          <label>Speed <input id="speed" type="range" min="1" max="20" value="8" /></label>
+          <label class="file">Load spectator.json <input id="file" type="file" accept="application/json" /></label>
+        </div>
+      </header>
+      <section class="status" id="status"></section>
+      <main>
+        <div class="board-wrap">
+          <div id="board" class="board" aria-label="12 by 12 war map"></div>
+        </div>
+        <aside>
+          <h2>Powers</h2>
+          <div id="powers"></div>
+          <h2>Battle / event log</h2>
+          <ol id="log"></ol>
+          <h2>Last action</h2>
+          <pre id="action"></pre>
+        </aside>
+      </main>
+      <footer>
+        Fan-made tribute to classic global WWII blockette-game mechanics. Not affiliated with Hasbro, Avalon Hill, or
+        Wizards of the Coast. Original 12×12 schematic — no official art.
+      </footer>
+    </div>
+    <script type="module" src="/src/spectator/main.ts"></script>
+  </body>
+</html>
