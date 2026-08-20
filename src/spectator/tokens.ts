@@ -5,7 +5,7 @@
 
 import { UNIT_TYPES, type UnitType } from "../data/catalog.ts";
 
-const VIEW = `viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"`;
+const VIEW = `viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"`;
 
 function svg(inner: string): string {
   return `<svg class="glyph" ${VIEW} fill="currentColor">${inner}</svg>`;
@@ -120,4 +120,8 @@ export function stackGlyph(type: string): string {
 
 export function factoryGlyph(): string {
   return svg(factoryInner());
+}
+
+export function victoryStar(): string {
+  return `<svg class="star-mark" viewBox="0 0 12 12" width="10" height="10" aria-hidden="true" fill="#c9a227"><path d="M6 .55 7.4 4.2l3.9.2-3.05 2.45.95 3.75L6 8.5 2.8 10.6l.95-3.75L.7 4.4l3.9-.2z"/></svg>`;
 }
