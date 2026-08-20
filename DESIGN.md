@@ -45,15 +45,21 @@ Opening fire (AAA vs air, sub surprise if no destroyer, BB/CA shore bombardment)
 
 Dice use a seeded mulberry32 stream stored on the state (`rngState`) so a seed plus action sequence is deterministic.
 
-## Known gaps (v1)
+## Known gaps
 
-- Strategic bombing is not a separate sequence; bombers fight in general combat.
-- Air units are not forced to reserve landing movement during combat move.
-- IC damage / placement caps from SBR are not modeled.
+Implemented since v1:
+
+- Strategic bombing raids are a separate combat sequence: bombers alone in an enemy industrial-complex territory bomb the IC. Defending AA fires first, then each surviving bomber rolls one die; total damage (capped at the territory's IPC value) raises `factoryDamage`.
+- SBR damage reduces the territory's income 1:1 (down to zero) during collect.
+- Air units reserve one movement for landing during combat move.
+- Submarines may submerge out of a sea battle when no enemy destroyer is present.
+
+Still open:
+
+- IC production / placement caps are not modeled (a damaged factory still places at full capacity).
 - Only the active power attacks (no multinational attack).
-- Subs do not submerge after a round; they fight or die.
-- Optional neutrals-can-be-attacked rule is off: neutrals are impassable.
 - Carrier-fighter pairing is approximate (fighters in the same sea, 2 per carrier).
+- Optional neutrals-can-be-attacked rule is off: neutrals are impassable.
 - Some merged land stacks and almost all navies are best-effort.
 
 ## Protocol (ideas, not a vendor)

@@ -36,11 +36,13 @@ export interface CellState {
 
 export interface Battle {
   cell: string;
-  kind: "land" | "sea" | "amphibious";
+  kind: "land" | "sea" | "amphibious" | "sbr";
   attacker: PowerId;
   /** Opening fire already resolved. */
   opened: boolean;
   bombardCells: string[];
+  /** Submarine ids that submerged out of this battle. */
+  submerged: string[];
 }
 
 export type LogEvent =
@@ -92,6 +94,7 @@ export type Action =
   | { type: "unload"; transportId: string; to: string }
   | { type: "fight"; cell: string }
   | { type: "retreat"; cell: string }
+  | { type: "submerge"; cell: string }
   | { type: "place"; unit: UnitType; at: string };
 
 export interface StepInfo {

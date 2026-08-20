@@ -190,8 +190,9 @@ export function destinationsFor(state: GameState, unit: Unit): string[] {
       return neighborsForMove(state, id).some((n) => isHostileLand(state, n, power));
     });
   }
-  // air
-  const raw = reachable(state, unit.cell, range, airEnter, () => false);
+  // air — reserve one movement so the unit can land on a friendly territory/carrier.
+  const airRange = combat ? Math.max(0, stats.movement - 1) : stats.movement;
+  const raw = reachable(state, unit.cell, airRange, airEnter, () => false);
   if (combat) {
     return raw.filter((id) => isHostileLand(state, id, power) || (CELL_BY_ID[id]?.kind === "sea" && hasEnemyUnits(state, id, power)));
   }
@@ -303,6 +304,15 @@ export function legalActions(state: GameState): Action[] {
       for (const b of state.battles) {
         acts.push({ type: "fight", cell: b.cell });
         acts.push({ type: "retreat", cell: b.cell });
+        if (b.kind === "sea") {
+          const hasSub = unitsAt(
+            state,
+            b.cell,
+            (u) => u.owner === power && u.type === "submarine" && !b.submerged.includes(u.id),
+          ).length > 0;
+          const enemyDestroyer = unitsAt(state, b.cell, (u) => !areAllied(u.owner, power) && u.type === "destroyer").length > 0;
+          if (hasSub && !enemyDestroyer) acts.push({ type: "submerge", cell: b.cell });
+        }
       }
       if (!acts.length) acts.push({ type: "end_phase" });
       return acts;

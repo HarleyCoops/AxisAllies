@@ -3,6 +3,7 @@ import {
   COMBAT_TABLE,
   UNIT_CATALOG,
   areAllied,
+  isLandCombatant,
   type PowerId,
   type UnitType,
 } from "../data/catalog.ts";
@@ -11,14 +12,22 @@ import { removeUnit, unitsAt } from "./state.ts";
 import type { Battle, GameState, Unit } from "./types.ts";
 
 export function attackersIn(state: GameState, battle: Battle): Unit[] {
-  return unitsAt(state, battle.cell, (u) => u.owner === battle.attacker && participates(u, battle.kind));
+  return unitsAt(
+    state,
+    battle.cell,
+    (u) => u.owner === battle.attacker && participates(u, battle.kind) && !battle.submerged.includes(u.id),
+  );
 }
 
 export function defendersIn(state: GameState, battle: Battle): Unit[] {
   return unitsAt(
     state,
     battle.cell,
-    (u) => u.owner !== battle.attacker && !areAllied(u.owner, battle.attacker) && participates(u, battle.kind),
+    (u) =>
+      u.owner !== battle.attacker &&
+      !areAllied(u.owner, battle.attacker) &&
+      participates(u, battle.kind) &&
+      !battle.submerged.includes(u.id),
   );
 }
 
@@ -229,12 +238,50 @@ export function battleOpen(state: GameState, battle: Battle): boolean {
   return attackersIn(state, battle).length > 0 && defendersIn(state, battle).length > 0;
 }
 
+export function resolveStrategicBombing(state: GameState, battle: Battle, rng: Rng): void {
+  const cell = battle.cell;
+  const bombers = attackersIn(state, battle);
+  if (!bombers.length) return;
+
+  // Defending AA fires first (hit on aaaHitOn, up to aaaShotsPerUnit per AA gun).
+  const aaa = unitsAt(state, cell, (u) => u.type === "aaa");
+  const shots = Math.min(aaa.length * COMBAT_TABLE.aaaShotsPerUnit, bombers.length);
+  if (shots > 0) {
+    const r = rollHits(shots, COMBAT_TABLE.aaaHitOn, rng);
+    state.log.push({ t: "roll", cell, side: "opening", hits: r.hits, dice: r.dice });
+    applyHits(state, bombers, r.hits, cell);
+  }
+
+  const survivors = attackersIn(state, battle);
+  if (!survivors.length) {
+    battle.opened = true;
+    return;
+  }
+
+  // Each surviving bomber rolls one die; total damage, capped at the factory's value.
+  const value = CELL_BY_ID[cell]?.ipc ?? 0;
+  const current = state.cells[cell].factoryDamage;
+  let damage = 0;
+  for (let i = 0; i < survivors.length; i++) damage += rng.d6();
+  damage = Math.min(damage, Math.max(0, value - current));
+  if (damage > 0) state.cells[cell].factoryDamage = current + damage;
+  state.log.push({
+    t: "note",
+    text: `strategic bombing ${cell}: ${damage} damage (factory ${state.cells[cell].factoryDamage}/${value})`,
+  });
+  battle.opened = true;
+}
+
 export function resolveBattle(
   state: GameState,
   battle: Battle,
   rng: Rng,
   opts: { retreatAfter?: number; maxRounds?: number } = {},
 ): void {
+  if (battle.kind === "sbr") {
+    resolveStrategicBombing(state, battle, rng);
+    return;
+  }
   const maxRounds = opts.maxRounds ?? 12;
   if (!battle.opened) resolveOpeningFire(state, battle, rng);
   let round = 0;
@@ -273,6 +320,17 @@ export function detectBattles(state: GameState, power: PowerId): Battle[] {
     seen.add(u.cell);
     const def = CELL_BY_ID[u.cell];
     if (!def) continue;
+
+    // Strategic bombing raid: the power's bombers alone in an enemy IC territory.
+    const bombers = unitsAt(state, u.cell, (x) => x.owner === power && x.type === "bomber");
+    const atkLand = unitsAt(state, u.cell, (x) => x.owner === power && isLandCombatant(x.type));
+    const controller = state.cells[u.cell]?.controller;
+    const hostileIc = def.kind === "land" && Boolean(controller && !areAllied(controller, power)) && def.factory;
+    if (hostileIc && bombers.length && !atkLand.length) {
+      battles.push({ cell: u.cell, kind: "sbr", attacker: power, opened: false, bombardCells: [], submerged: [] });
+      continue;
+    }
+
     const enemies = unitsAt(
       state,
       u.cell,
@@ -280,9 +338,9 @@ export function detectBattles(state: GameState, power: PowerId): Battle[] {
     );
     if (!enemies.length) continue;
     if (def.kind === "sea") {
-      battles.push({ cell: u.cell, kind: "sea", attacker: power, opened: false, bombardCells: [] });
+      battles.push({ cell: u.cell, kind: "sea", attacker: power, opened: false, bombardCells: [], submerged: [] });
     } else {
-      const battle: Battle = { cell: u.cell, kind: "land", attacker: power, opened: false, bombardCells: [] };
+      const battle: Battle = { cell: u.cell, kind: "land", attacker: power, opened: false, bombardCells: [], submerged: [] };
       fillBombardment(state, battle);
       if (battle.bombardCells.length) battle.kind = "amphibious";
       battles.push(battle);

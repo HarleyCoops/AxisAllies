@@ -5,7 +5,12 @@ import type { GameState } from "./types.ts";
 export function ipcHeld(state: GameState, power: PowerId): number {
   let n = 0;
   for (const cell of Object.values(state.cells)) {
-    if (cell.controller === power) n += CELL_BY_ID[cell.id]?.ipc ?? 0;
+    if (cell.controller !== power) continue;
+    const def = CELL_BY_ID[cell.id];
+    if (!def) continue;
+    // Strategic-bombing damage reduces a territory's income, down to zero.
+    const damage = Math.min(def.ipc, cell.factoryDamage);
+    n += Math.max(0, def.ipc - damage);
   }
   return n;
 }

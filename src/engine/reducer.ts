@@ -11,6 +11,7 @@ import {
 import {
   attackersIn,
   attachRng,
+  battleOpen,
   commitRng,
   defendersIn,
   detectBattles,
@@ -121,9 +122,22 @@ function enterCombatPhase(state: GameState): void {
 }
 
 function finishBattle(state: GameState, cell: string): void {
+  const battle = state.battles.find((b) => b.cell === cell);
   state.battles = state.battles.filter((b) => b.cell !== cell);
   const power = state.activePower;
   const def = CELL_BY_ID[cell];
+  if (battle?.kind === "sbr") {
+    // Strategic bombers return to a friendly-controlled land cell after the raid.
+    const home = state.controlledAtTurnStart.find(
+      (id) => CELL_BY_ID[id]?.kind === "land" && state.cells[id]?.controller === power,
+    );
+    if (home) {
+      for (const u of unitsAt(state, cell, (x) => x.owner === power && x.type === "bomber")) {
+        u.cell = home;
+      }
+    }
+    return;
+  }
   if (def?.kind === "land" && landConquerors(state, cell, power).length) {
     const owner = state.cells[cell].controller;
     if (owner && !areAllied(owner, power)) {
@@ -286,6 +300,19 @@ function applyRetreat(state: GameState, cell: string): void {
   finishBattle(state, cell);
 }
 
+function applySubmerge(state: GameState, cell: string): void {
+  const battle = state.battles.find((b) => b.cell === cell);
+  if (!battle || battle.kind !== "sea") return;
+  for (const u of unitsAt(
+    state,
+    cell,
+    (x) => x.owner === state.activePower && x.type === "submarine" && !battle.submerged.includes(x.id),
+  )) {
+    battle.submerged.push(u.id);
+  }
+  state.log.push({ t: "note", text: `${state.activePower} submerged submarines in ${cell}` });
+}
+
 export function applyAction(state: GameState, action: Action): { ok: boolean; reason?: string } {
   if (state.done) return { ok: false, reason: "game over" };
   if (!isLegal(state, action)) return { ok: false, reason: "illegal action" };
@@ -318,6 +345,16 @@ export function applyAction(state: GameState, action: Action): { ok: boolean; re
       break;
     case "retreat":
       applyRetreat(state, action.cell);
+      if (!state.battles.length) advancePhase(state);
+      break;
+    case "submerge":
+      applySubmerge(state, action.cell);
+      {
+        const sb = state.battles.find((b) => b.cell === action.cell);
+        if (sb && !battleOpen(state, sb)) {
+          state.battles = state.battles.filter((b) => b.cell !== action.cell);
+        }
+      }
       if (!state.battles.length) advancePhase(state);
       break;
     case "place":

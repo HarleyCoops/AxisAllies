@@ -67,6 +67,15 @@ export const ACTION_SCHEMA = {
     {
       type: "object",
       additionalProperties: false,
+      required: ["type", "cell"],
+      properties: {
+        type: { const: "submerge" },
+        cell: { type: "string" },
+      },
+    },
+    {
+      type: "object",
+      additionalProperties: false,
       required: ["type", "unit", "at"],
       properties: {
         type: { const: "place" },
@@ -77,7 +86,7 @@ export const ACTION_SCHEMA = {
   ],
 } as const;
 
-const TYPES = new Set(["end_phase", "buy", "move", "load", "unload", "fight", "retreat", "place"]);
+const TYPES = new Set(["end_phase", "buy", "move", "load", "unload", "fight", "retreat", "submerge", "place"]);
 
 export function validateAction(raw: unknown): { ok: true; action: Action } | { ok: false; error: string } {
   if (!raw || typeof raw !== "object") return { ok: false, error: "action must be an object" };
@@ -110,6 +119,9 @@ export function validateAction(raw: unknown): { ok: true; action: Action } | { o
     case "retreat":
       if (typeof a.cell !== "string") return { ok: false, error: "retreat.cell required" };
       return { ok: true, action: { type: "retreat", cell: a.cell } };
+    case "submerge":
+      if (typeof a.cell !== "string") return { ok: false, error: "submerge.cell required" };
+      return { ok: true, action: { type: "submerge", cell: a.cell } };
     case "place":
       if (typeof a.unit !== "string" || typeof a.at !== "string") return { ok: false, error: "place needs unit,at" };
       return { ok: true, action: { type: "place", unit: a.unit as UnitType, at: a.at } };
