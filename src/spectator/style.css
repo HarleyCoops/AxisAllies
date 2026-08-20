@@ -12,8 +12,8 @@
   --japan: #d39a1c;
   --usa: #3a6a3e;
   --paper-grain:
-    repeating-linear-gradient(45deg, rgba(28, 22, 16, 0.045) 0 1px, transparent 1px 6px),
-    repeating-linear-gradient(-45deg, rgba(90, 70, 36, 0.03) 0 1px, transparent 1px 7px);
+    repeating-linear-gradient(45deg, rgba(28, 22, 16, 0.07) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(-45deg, rgba(90, 70, 36, 0.045) 0 1px, transparent 1px 6px);
 }
 
 * { box-sizing: border-box; }
@@ -148,16 +148,26 @@ main {
   line-height: 1.15;
   color: var(--ink);
   overflow: hidden;
-  border: 1px solid rgba(28, 22, 16, 0.28);
+  border-style: solid;
+  border-width: 0;
+  border-color: transparent;
 }
+
+.cell.landline-n { border-top: 1px solid rgba(28, 22, 16, 0.2); }
+.cell.landline-s { border-bottom: 1px solid rgba(28, 22, 16, 0.2); }
+.cell.landline-e { border-right: 1px solid rgba(28, 22, 16, 0.2); }
+.cell.landline-w { border-left: 1px solid rgba(28, 22, 16, 0.2); }
+.cell.shore-n { border-top: 2px solid #121c20; }
+.cell.shore-s { border-bottom: 2px solid #121c20; }
+.cell.shore-e { border-right: 2px solid #121c20; }
+.cell.shore-w { border-left: 2px solid #121c20; }
 
 .cell.sea {
   background-color: var(--ocean);
   background-image:
-    repeating-linear-gradient(0deg, transparent 0 13px, rgba(255, 255, 255, 0.055) 13px 14px),
-    repeating-linear-gradient(90deg, transparent 0 15px, rgba(255, 255, 255, 0.04) 15px 16px);
+    repeating-linear-gradient(0deg, transparent 0 15px, rgba(232, 220, 180, 0.07) 15px 16px),
+    repeating-linear-gradient(90deg, transparent 0 15px, rgba(232, 220, 180, 0.05) 15px 16px);
   color: #d8e4df;
-  border-color: rgba(10, 30, 36, 0.38);
 }
 
 .cell.sea.coast {
@@ -168,6 +178,12 @@ main {
   background-color: var(--parchment);
   background-image: var(--paper-grain);
 }
+
+.cell.land.ussr { background-color: color-mix(in srgb, var(--parchment) 86%, var(--ussr) 14%); }
+.cell.land.germany { background-color: color-mix(in srgb, var(--parchment) 86%, var(--germany) 14%); }
+.cell.land.uk { background-color: color-mix(in srgb, var(--parchment) 84%, var(--uk) 16%); }
+.cell.land.japan { background-color: color-mix(in srgb, var(--parchment) 84%, var(--japan) 16%); }
+.cell.land.usa { background-color: color-mix(in srgb, var(--parchment) 86%, var(--usa) 14%); }
 
 .cell.neutral {
   background-color: var(--neutral);
@@ -235,6 +251,8 @@ main {
 }
 
 .vc {
+  display: inline-flex;
+  align-items: center;
   color: var(--gold);
   font-size: 8px;
   font-family: "Special Elite", "Courier New", ui-monospace, monospace;
@@ -242,9 +260,11 @@ main {
   text-shadow: 0 0 1px rgba(28, 22, 16, 0.45);
 }
 
-.vc .star {
-  font-size: 9px;
-  margin-right: 1px;
+.vc .star-mark {
+  width: 10px;
+  height: 10px;
+  margin-right: 2px;
+  flex-shrink: 0;
 }
 
 .factory-mark {
@@ -287,20 +307,23 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 1px;
-  padding: 0 2px;
-  border-radius: 2px;
-  background: rgba(26, 22, 16, 0.08);
+  padding: 0;
   font-family: "Special Elite", "Courier New", ui-monospace, monospace;
   font-size: 9px;
   font-weight: 400;
   line-height: 1;
+  filter: drop-shadow(0 0 0.7px rgba(28, 22, 16, 0.9));
 }
 
-.cell.sea .stack { background: rgba(26, 22, 16, 0.28); }
+.cell.sea .stack {
+  padding: 0 1px;
+  background: rgba(16, 12, 8, 0.22);
+  border-radius: 2px;
+}
 
 .stack svg {
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
   display: block;
 }
 

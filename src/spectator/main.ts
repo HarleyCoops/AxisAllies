@@ -1,11 +1,20 @@
-import { adjacentIds, CELL_BY_ID, CELLS, HEIGHT, WIDTH, type CellDef } from "../data/board.ts";
+import {
+  adjacentIds,
+  CELL_BY_ID,
+  CELL_BY_XY,
+  CELLS,
+  HEIGHT,
+  WIDTH,
+  wrapX,
+  type CellDef,
+} from "../data/board.ts";
 import { POWER_META, POWERS, type PowerId } from "../data/catalog.ts";
 import type { GameState } from "../engine/types.ts";
 import { createEnv } from "../gym/env.ts";
 import { observe } from "../gym/observation.ts";
 import { compactFrame } from "../engine/view.ts";
 import { RandomLegalPolicy } from "../harness/policies.ts";
-import { factoryGlyph, stackGlyph } from "./tokens.ts";
+import { factoryGlyph, stackGlyph, victoryStar } from "./tokens.ts";
 
 const COASTAL_SEA = new Set<string>();
 for (const cell of CELLS) {
@@ -19,8 +28,35 @@ function isNamedTheatre(def: CellDef): boolean {
   return def.kind === "sea" && !def.name.startsWith("Sea ");
 }
 
+function neighborAt(def: CellDef, dx: number, dy: number): CellDef | null {
+  const y = def.y + dy;
+  if (y < 0 || y >= HEIGHT) return null;
+  return CELL_BY_XY[y][wrapX(def.x + dx)];
+}
+
+function edgeClasses(def: CellDef): string[] {
+  const dirs = [
+    ["n", 0, -1],
+    ["s", 0, 1],
+    ["w", -1, 0],
+    ["e", 1, 0],
+  ] as const;
+  const out: string[] = [];
+  for (const [dir, dx, dy] of dirs) {
+    const other = neighborAt(def, dx, dy);
+    if (!other) {
+      out.push(`shore-${dir}`);
+      continue;
+    }
+    if (def.kind === "sea" && other.kind === "sea") out.push(`join-${dir}`);
+    else if (def.kind !== "sea" && other.kind !== "sea") out.push(`landline-${dir}`);
+    else out.push(`shore-${dir}`);
+  }
+  return out;
+}
+
 function cellClassName(def: CellDef, ctrl: string | null | undefined): string {
-  const parts = ["cell", def.kind];
+  const parts = ["cell", def.kind, ...edgeClasses(def)];
   if (ctrl) parts.push(ctrl);
   if (def.canal) parts.push("canal");
   if (def.capital) parts.push("capital");
@@ -99,7 +135,7 @@ function render(frame: Frame, action?: unknown): void {
       el.className = cellClassName(def, ctrl);
       const marks: string[] = [];
       if (def.victoryCity) {
-        marks.push(`<div class="vc"><span class="star" aria-hidden="true">★</span>${def.victoryCity}</div>`);
+        marks.push(`<div class="vc">${victoryStar()}${def.victoryCity}</div>`);
       }
       if (def.factory) {
         marks.push(`<span class="factory-mark" title="Industrial complex">${factoryGlyph()}</span>`);
